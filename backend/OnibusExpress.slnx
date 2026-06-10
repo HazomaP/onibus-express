@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/OnibusExpress.Api/OnibusExpress.Api.csproj" />
+    <Project Path="src/OnibusExpress.Application/OnibusExpress.Application.csproj" />
+    <Project Path="src/OnibusExpress.Domain/OnibusExpress.Domain.csproj" />
+    <Project Path="src/OnibusExpress.Infrastructure/OnibusExpress.Infrastructure.csproj" />
+  </Folder>
+</Solution>
