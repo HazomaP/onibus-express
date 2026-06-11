@@ -5,4 +5,7 @@
     <Project Path="src/OnibusExpress.Domain/OnibusExpress.Domain.csproj" />
     <Project Path="src/OnibusExpress.Infrastructure/OnibusExpress.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/OnibusExpress.Tests/OnibusExpress.Tests.csproj" />
+  </Folder>
 </Solution>
