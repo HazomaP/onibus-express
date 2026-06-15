@@ -1,67 +1,74 @@
-# OniBus Express - API de Reservas
+#  OniBus Express - API de Reservas
 
-Este projeto consiste no desenvolvimento do backend do **OniBus Express**, uma plataforma de gerenciamento e reserva de passagens de ônibus. A aplicação foi projetada com foco em alta escalabilidade, isolamento de componentes e regras de negócio robustas, estando totalmente preparada para ambientes de produção conteinerizados.
-
----
-
-##  Tecnologias Utilizadas
-
-* **Runtime:** .NET 10.0 (C#)
-* **Mapeamento Objeto-Relacional (ORM):** Entity Framework Core 10
-* **Banco de Dados:** PostgreSQL 15
-* **Conteinerização:** Docker & Docker Compose
-* **Documentação:** Swagger UI (OpenAPI)
+Este repositório contém a solução de backend para o desafio técnico do **OniBus Express**. A API foi projetada para gerenciar rotas, viagens, passageiros e reservas de assentos, respeitando regras rigorosas de negócio e garantindo a consistência dos dados em um ambiente altamente concorrente.
 
 ---
 
-##  Arquitetura do Sistema
+##  Tecnologias e Bibliotecas Utilizadas 
 
-O projeto adota os princípios da **Clean Architecture** combinados com **Domain-Driven Design (DDD)**, garantindo a separação estrita de responsabilidades em quatro camadas bem definidas:
-
-1. **OnibusExpress.Domain:** Contém as entidades de negócio (`Rota`, `Viagem`, `Reserva`, `Passageiro`), agregados e validações essenciais. É uma camada livre de dependências externas.
-2. **OnibusExpress.Application:** Implementa os casos de uso do sistema, como a lógica coordenada do serviço de criação e gestão de reservas de assentos.
-3. **OnibusExpress.Infrastructure:** Responsável pela persistência de dados, incluindo a configuração do `DbContext` e repositórios mapeados para o PostgreSQL.
-4. **OnibusExpress.Api:** Ponto de entrada do sistema contendo os controladores REST, mapeamentos de rotas e configurações do Swagger.
-
----
-
-##  Regras de Negócio Implementadas
-
-* **Validação Estrutural:** Implementação de um validador algorítmico customizado para CPFs na camada de recepção de dados, impedindo o processamento de documentos inválidos.
-* **Consistência de Estado (Garantia de Assentos):** Mecanismo de bloqueio concorrente que impede a reserva duplicada do mesmo assento na mesma viagem.
-* **Trava de Segurança de Cancelamento:** Uma reserva só pode ser cancelada se a operação for realizada com uma antecedência mínima de **2 horas** em relação ao horário de partida agendado para a viagem.
+* **.NET 10 (C#):** Escolhido por sua alta performance, tipagem forte e maturidade para a construção de APIs corporativas seguras e escaláveis.
+* **Entity Framework Core 10:** ORM adotado para agilizar o mapeamento objeto-relacional, garantindo um controle seguro das *migrations* e do *data seeding* do banco de dados.
+* **PostgreSQL 15:** Banco de dados relacional robusto, escolhido por sua confiabilidade em transações e consistência de dados (ACID).
+* **Docker & Docker Compose:** Utilizados para garantir a paridade entre ambientes (o código roda da mesma forma no meu ambiente de desenvolvimento e na máquina do avaliador), eliminando o problema clássico de "na minha máquina funciona".
+* **Swashbuckle (Swagger):** Adotado para gerar a documentação interativa da API de forma automatizada, facilitando os testes manuais dos endpoints.
 
 ---
 
-##  Como Executar o Projeto via Docker
+##  Decisões de Arquitetura Relevantes
 
-A infraestrutura foi totalmente automatizada utilizando Docker Compose. Não é necessário ter o SDK do .NET ou o PostgreSQL instalados localmente na máquina hospedeira.
+1. **Clean Architecture e DDD:** O código C# foi estruturado em camadas (`Domain`, `Application`, `Infrastructure`, `Api`). Isso isola as regras de negócio vitais (como a validação de CPF e bloqueio de cancelamento) dos detalhes de tecnologia (como banco de dados e frameworks web), facilitando a manutenção e a criação de testes.
+2. **Tratamento Universal de Fuso Horário (UTC):** Para evitar bugs de concorrência e divergência de relógios locais, foi decidido que a persistência e a comunicação de datas na API e no PostgreSQL ocorrem estritamente no formato UTC.
+3. **Consistência de Estado (Garantia de Assentos):** A lógica de ocupação de assentos é validada diretamente no servidor no momento da inserção, prevenindo *race conditions* (evitando que dois usuários consigam reservar o mesmo assento na mesma fração de segundo).
 
-### Pré-requisitos
-* Docker e Docker Compose instalados e em execução.
+---
 
-### Passo a Passo
+## ✅O que foi implementado 
 
-1. Clone o repositório para o seu ambiente local.
-2. Abra o terminal na pasta raiz do projeto (onde o arquivo `docker-compose.yml` está localizado).
-3. Execute o comando para compilar as imagens e subir os serviços:
+**O que foi implementado (MVP Backend Completo):
+*  API RESTful completa conectada ao PostgreSQL.
+* Infraestrutura Docker conteinerizada (Banco de Dados e Aplicação).
+*  Algoritmo nativo de validação de CPF na camada de Domínio/Aplicação.
+*  Regra de negócio: Trava de segurança que proíbe o cancelamento de uma reserva com menos de 2 horas de antecedência para a partida.
+*  Documentação interativa via Swagger UI.
 
-```bash
-docker-compose up --build
 
-# Documentação da API
 
-Assim que o terminal indicar que a aplicação foi iniciada com sucesso, a documentação interativa e os endpoints para testes estarão acessíveis através do Swagger:
+---
 
-URL de Acesso: http://localhost:5277/swagger
+##  Como rodar o projeto localmente
 
-Endpoints Disponíveis:
-GET /api/viagens - Lista todas as viagens e rotas disponíveis.
+### Opção 1: COM Docker (Recomendado)
+Esta é a maneira mais rápida. Você não precisa ter o SDK do .NET ou o PostgreSQL instalados na sua máquina.
 
-GET /api/viagens/{id} - Consulta os detalhes de uma viagem específica.
+1. Clone o repositório e abra o terminal na pasta raiz do projeto (onde está o arquivo `docker-compose.yml`).
 
-POST /api/reservas - Realiza a reserva de um assento em uma viagem.
+2. Execute o comando para compilar a imagem e subir a infraestrutura:
+   ```bash
+   docker-compose up --build
+O serviço de banco de dados subirá e o Entity Framework aplicará as migrations e o seed de dados automaticamente.
 
-GET /api/reservas/{codigo} - Consulta o status e informações de uma reserva através do código localizador.
+Acesse a documentação interativa para testar os endpoints em: http://localhost:5277/swagger
 
-DELETE /api/reservas/{codigo} - Cancela uma reserva ativa (sujeito à regra de antecedência de 2 horas).
+Opção 2: SEM Docker (Modo de Desenvolvimento Local)
+Caso queira debugar o código fonte diretamente no IDE (ex: Visual Studio ou VS Code):
+
+Certifique-se de ter um servidor PostgreSQL rodando localmente (porta 5432).
+
+Atualize a chave DefaultConnection dentro do arquivo appsettings.Development.json (localizado em src/OnibusExpress.Api) com as credenciais do seu banco de dados local.
+
+No terminal, navegue até a pasta principal da API e inicie a aplicação:
+
+Bash
+cd src/OnibusExpress.Api
+dotnet run
+Acesse http://localhost:5277/swagger no seu navegador.
+
+🧪 Como rodar os testes
+A arquitetura foi construída pensando na testabilidade das regras de domínio e casos de uso. Para executar a suíte de testes automatizados do .NET:
+
+Abra o terminal na pasta raiz do repositório.
+
+Execute o comando padrão do .NET CLI:
+
+Bash
+dotnet test
