@@ -31,10 +31,16 @@ namespace OnibusExpress.Api.Controllers
                 query = query.Where(v => v.Rota.Destino.ToLower().Contains(destino.ToLower()));
 
             if (data.HasValue)
-                query = query.Where(v => v.DataHoraPartida.Date == data.Value.Date);
+{
+                // Força a data recebida do Swagger a ser tratada como UTC
+                var dataBuscaUtc = DateTime.SpecifyKind(data.Value.Date, DateTimeKind.Utc);
+                
+                // Calcula o limite final do dia (meia-noite do dia seguinte)
+                var diaSeguinte = dataBuscaUtc.AddDays(1);
 
-            // Regra: Mostrar apenas viagens que ainda não aconteceram
-            query = query.Where(v => v.DataHoraPartida > DateTime.UtcNow);
+                // Busca viagens que aconteçam dentro dessa janela de 24 horas
+                query = query.Where(v => v.DataHoraPartida >= dataBuscaUtc && v.DataHoraPartida < diaSeguinte);
+}
 
             var viagens = await query.Select(v => new {
                 v.Id,
